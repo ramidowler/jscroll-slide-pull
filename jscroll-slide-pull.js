@@ -20,23 +20,24 @@
 						  // next = the page after the current
 						  // pull = the titlebar that pulls down the contents
 						
-					  var height = 		$('body').height();
-					  var scroller = 	$(this).find('.article-scroller');
-					  var slider = 		$(this);
-							  
-					  var previous = 	slider.prev();
-					  var next = 		slider.next();
-					  var pull = 		$(this).find('.titleBlock');
+					  var height = 		$('body').height(),
+						  scroller = 	$(this).find('.article-scroller'),
+						  slider = 		$(this),
+						  previous = 	slider.prev(),
+						  next = 		slider.next(),
+						  pull = 		$(this).find('.titleBlock');
 						  
 						  // used to know when function is done.
-						  $(this).addClass('done');
-				  var slideOn = true;
-					if (slider.attr('id')=='overlayed'){ 
+					$(this).addClass('done');
+					var slideOn = true;
+						  
+					if (slider.attr('id')=='instructions'){ 
 						  slideOn = false;
 						  };
-				  var pullHeight = $(pull).outerHeight(); // height is different for each title
+				  var maxPage = $('article-wrapper');
+						
+				  var animTime = window.animTime;
 						  
-				  var pullBottomMax = height-pullHeight; //the remainder of space
 				  var pullTop = 0;
 						  
 				  var pullPos = pull.scrollTop();		 
@@ -98,19 +99,23 @@
 						  */
 						  // these two chceks are to prevent sliding if
 						  // slider is animated or it is overlayed image
-			currentPage = JSON.parse(localStorage.getItem('currentPage'));
-			var remover =  $('.article-wrapper:eq(' + currentPage + ')');
-			
+			  var currentPage = JSON.parse(localStorage.getItem('currentPage'));
+			  var remover =  $('.article-wrapper:eq(' + currentPage + ')');
 			  if (!remover.is(':animated')) {
 				  
 				  slider.bind('mousedown touchstart',function(e){
 						  
-							  e.stopPropagation();
+							  
+							  var currentPage = JSON.parse(localStorage.getItem('currentPage'));
+							  //	  var remover =  $('.article-wrapper:eq(' + currentPage + ')');
+							  
+					  e.stopPropagation();
+							  
 					  width=$("body").width();
 					  height=$("body").height();
 					  
 							  
-							  slider.css({'-webkit-transform':'translate2d(0,0)'});
+					  slider.css({'-webkit-transform':'translate2d(0,0)'});
 							  
 					  if(mobile){
 						  e = e.originalEvent.touches[0];
@@ -148,7 +153,7 @@
 					  var prevsWX = 0; 	//stores the previous sWX
 					  
 					  var scrollDirection = 0;
-					  var nextpage = 0;
+					  var nextPage = 0;
 					  
 					  var display = false;
 					  var displayed = false;
@@ -212,8 +217,8 @@
 									  if (sWX<0) { 							//moving right
 										  display = true;
 										  nextPage = currentPage + 1;
-										  if (nextPage > maxPage+1){		//don't display any new pages
-											  nextPage = maxPage+1;
+										  if (nextPage > maxPage){		//don't display any new pages
+											  nextPage = maxPage;
 											  display = false;
 										  } else { 			
 											//  	display right page under the current page
@@ -254,11 +259,13 @@
 									//  scrollbarV.fadeOut();
 									//  scrollbarH.fadeOut();
 							}
+									var maxPage = window.maxPage;
 							if (scrollDirection ==1 && slideOn==true){	
 									// only perform horizontal changes
 								  //      sX = ev.pageX;
 								  //      var ultimate = initX-sX;
 								var distance = Math.abs(initX-sX);
+									
 									
 								if (nextPage < 1){		
 									//	can't go past beginning
@@ -312,12 +319,23 @@
 			  // start of pull-down for title
 		  pull.bind('mousedown touchstart',function(e){
 					e.stopPropagation();
+					
+					width=$("body").width();
+					height=$("body").height();
+					var pullHeight = $(pull).outerHeight(); // height is different for each title
+					var pullBottomMax = $('body').height()-pullHeight; //the remainder of space	
+					
+					$('.hide-up').css('height',pullBottomMax+'px');
+					
+					
 					if(mobile){
 					e.preventDefault();
 					e = e.originalEvent.touches[0];
 					}	
 					//e = e.originalEvent.touches[0];
-					slider.unbind('mousemove touchmove mouseup touchend');
+					//	slider.unbind('mousemove touchmove mouseup touchend');
+					
+					
 					//var pullPos = pull.scrollTop();
 					
 					var initY = e.pageY;
@@ -334,7 +352,6 @@
 									 ev = ev.originalEvent.touches[0];
 									 }	 
 						pullPos = pull.offset().top;		 
-						// console.log('position '+pullPos+' current '+sY);
 						pullTop = pullPos - (ev.pageY-sY);
 						//	  var current = pull.offset();
 						//	 var currentTop = current.top;
@@ -342,11 +359,12 @@
 						sY = ev.pageY;
 
 						pullDistance = Math.abs(sWY);
-						pullDirection =sWY/pullDistance;
+						var pullDirection =sWY/pullDistance;
 
 						sY = ev.pageY;
 
 						pull.css('top',sY+'px');
+						$('.hide-up').css('top',-pullBottomMax+sY+'px');
 								
 					}); //end of pull-down scroll check
 					
@@ -354,26 +372,30 @@
 						$(document).unbind('mousemove touchmove mouseup touchend');
 						pull.unbind('mousemove touchmove mouseup touchend');
 									 
-									 //		 console.log(sWY);
-						 if (sWY>0) {// are we moving down?
+						 var pullHeight = $(pull).outerHeight(); // height is different for each title
+						 var pullBottomMax = $('body').height()-pullHeight; //the remainder of space			 
+						
+						if (sWY>0) {// are we moving down?
 									 // console.log('moving down');
-							  if (pullDistance > 100) {
-								  pull.animate({'top':pullBottomMax+'px'},animTime/2,'easeOutBounce',function(){
-										 });
-							 } else { pull.animate({'top':'0px'},animTime/2,'easeOutBounce',function(){
-										 });
-							 } // end of top check
-									 } else if (sWY<0){ //are we moving the page up?
+							    if (pullDistance > 100) {
+									 pull.animate({'top':pullBottomMax+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+									$('.hide-up').animate({'top':0+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+								} else { 
+									pull.animate({'top':'0px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+									$('.hide-up').animate({'top':-pullBottomMax+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+								} // end of top check
+						 } else if (sWY<0){ //are we moving the page up?
 									 // console.log('moving up');
 							  if (pullDistance <100 && pullDistance!=0){
+									 pull.animate({'top':pullBottomMax+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+									 $('.hide-up').animate({'top':0+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+								 } else {
+									 pull.animate({'top':'0px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
+									 $('.hide-up').animate({'top':-pullBottomMax+'px'},{duration:animTime/2, queue: false,easing:'easeOutBounce'});
 									 
-									 pull.animate({'top':pullBottomMax+'px'},animTime/2,'easeOutBounce',function(){
-									 });
-							 } else {pull.animate({'top':'0px'},animTime/2,'easeOutBounce',function(){
-											});
-									 } // end of bottom check
+								} // end of bottom check
 						 }
-							  distance = 0;
+									 //	$('.hide-up').css('bottom','100%');
 					});
 			}); //end pull bind
 								
